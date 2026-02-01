@@ -15,9 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Download, Settings2, Target, Dumbbell, RotateCcw } from 'lucide-react'
+import { Download, Settings2, Target, Dumbbell, RotateCcw, Info } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { Toaster } from '@/components/ui/toaster'
+import { VersionDisplay } from '@/components/version-display'
 
 export default function SettingsPage() {
   const { state, isLoading, updateSettings, exportData } = useStore()
@@ -271,6 +272,28 @@ export default function SettingsPage() {
             <Download className="h-4 w-4" />
             Export Data as JSON
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* App Version */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+              <Info className="h-5 w-5 text-secondary-foreground" />
+            </div>
+            <div>
+              <CardTitle className="text-base">App Information</CardTitle>
+              <CardDescription className="text-xs">
+                Current version and build details
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center py-4">
+            <VersionDisplay />
+          </div>
         </CardContent>
       </Card>
 

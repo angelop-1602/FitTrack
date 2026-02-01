@@ -7,6 +7,7 @@ import { BottomNav } from '@/components/bottom-nav'
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
 import { PWARegistration } from '@/components/pwa-registration'
 import { NetworkStatus } from '@/components/network-status'
+import { UpdateNotification } from '@/components/update-notification'
 import { LayoutWrapper } from '@/components/layout-wrapper'
 import './globals.css'
 
@@ -80,6 +81,7 @@ export default function RootLayout({
         <PWARegistration />
         <StoreProvider>
           <NetworkStatus />
+          <UpdateNotification />
           <LayoutWrapper>
             {children}
           </LayoutWrapper>

@@ -1,5 +1,8 @@
 // Service Worker for FitTrack PWA
-const CACHE_NAME = 'fittrack-v1';
+// Version: 1.0.0
+const APP_VERSION = '1.0.0';
+const CACHE_VERSION = 1;
+const CACHE_NAME = `fittrack-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache on install
@@ -172,4 +175,12 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || 'FitTrack', options)
   );
+});
+
+// Message event - handle commands from clients
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[Service Worker] Skipping waiting...');
+    self.skipWaiting();
+  }
 });
