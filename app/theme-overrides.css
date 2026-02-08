@@ -1,0 +1,111 @@
+/**
+ * Orange theme overrides – loaded AFTER globals.css so they always win.
+ * Fixes green coming from Tailwind/default theme.
+ */
+
+:root,
+.dark {
+  --primary: oklch(0.68 0.18 47);
+  --primary-foreground: oklch(0.99 0 0);
+  --color-primary: oklch(0.68 0.18 47);
+  --color-primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.68 0.18 47);
+  --chart-1: oklch(0.68 0.18 47);
+  --color-chart-1: oklch(0.68 0.18 47);
+  --sidebar-primary: oklch(0.68 0.18 47);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-ring: oklch(0.68 0.18 47);
+}
+
+[data-slot="bottom-nav"] a.text-primary {
+  color: oklch(0.68 0.18 47) !important;
+}
+
+html .text-primary,
+html.dark .text-primary,
+.text-primary,
+.text-chart-1 {
+  color: oklch(0.68 0.18 47) !important;
+}
+
+html .text-primary-foreground,
+.text-primary-foreground {
+  color: oklch(0.99 0 0) !important;
+}
+
+html .bg-primary,
+html.dark .bg-primary,
+.bg-primary {
+  background-color: oklch(0.68 0.18 47) !important;
+}
+
+html .bg-primary\/10,
+html.dark .bg-primary\/10,
+.bg-primary\/10 {
+  background-color: oklch(0.68 0.18 47 / 0.1) !important;
+}
+
+html .bg-primary\/20,
+.bg-primary\/20 {
+  background-color: oklch(0.68 0.18 47 / 0.2) !important;
+}
+
+.bg-primary\/5 {
+  background-color: oklch(0.68 0.18 47 / 0.05) !important;
+}
+
+.bg-primary\/90 {
+  background-color: oklch(0.68 0.18 47 / 0.9) !important;
+}
+
+html .border-primary,
+html .border-primary\/30,
+html.dark .border-primary,
+.border-primary,
+.border-primary\/30 {
+  border-color: oklch(0.68 0.18 47 / 0.3) !important;
+}
+
+.border-primary\/20 {
+  border-color: oklch(0.68 0.18 47 / 0.2) !important;
+}
+
+.border-primary\/50 {
+  border-color: oklch(0.68 0.18 47 / 0.5) !important;
+}
+
+.hover\:bg-primary\/20:hover {
+  background-color: oklch(0.68 0.18 47 / 0.2) !important;
+}
+
+.hover\:bg-primary\/90:hover {
+  background-color: oklch(0.68 0.18 47 / 0.9) !important;
+}
+
+.from-primary\/10 {
+  --tw-gradient-from: oklch(0.68 0.18 47 / 0.1);
+  --tw-gradient-to: oklch(0.68 0.18 47 / 0);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.via-primary\/5 {
+  --tw-gradient-to: oklch(0.68 0.18 47 / 0.05);
+  --tw-gradient-stops: var(--tw-gradient-from), oklch(0.68 0.18 47 / 0.05), var(--tw-gradient-to);
+}
+
+.border-t.border-primary {
+  border-color: oklch(0.68 0.18 47) !important;
+}
+
+.border-4.border-primary {
+  border-color: oklch(0.68 0.18 47) !important;
+}
+
+/* Steps = blue (chart-2), not green */
+.text-chart-2 {
+  color: oklch(0.6 0.16 260) !important;
+}
+
+.bg-chart-2\/10 {
+  background-color: oklch(0.6 0.16 260 / 0.1) !important;
+}

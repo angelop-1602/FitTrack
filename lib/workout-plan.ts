@@ -50,7 +50,6 @@ export const WORKOUT_PLAN: WorkoutDay[] = [
     name: "Active Recovery",
     description: "Shoulder Health (Easy Day)",
     exercises: [
-      { key: "cardio-recovery", name: "Cardio: Incline Walk / Bike", sets: 1, reps: "25-35 min", notes: "Easy-moderate" },
       { key: "band-external-rotation", name: "Band/Cable External Rotation", sets: 2, reps: "12-15/side" },
       { key: "rear-delt-fly-machine", name: "Rear Delt Fly Machine", sets: 2, reps: "15-20" },
       { key: "straight-arm-pulldown", name: "Straight-arm Pulldown (light)", sets: 2, reps: "12-15" },
@@ -84,7 +83,6 @@ export const WORKOUT_PLAN: WorkoutDay[] = [
       { key: "bulgarian-split-squat", name: "Bulgarian Split Squat", sets: 3, reps: "8-12/side" },
       { key: "leg-curl-6", name: "Leg Curl", sets: 3, reps: "10-15" },
       { key: "calf-raise-6", name: "Calf Raise", sets: 3, reps: "10-15" },
-      { key: "conditioning", name: "Conditioning: Incline Walk/Bike", sets: 1, reps: "15-25 min" },
       { key: "cardio-incline-walk-6", name: "Optional: Incline Walk", sets: 1, reps: "20-30 min" },
     ]
   },

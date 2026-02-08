@@ -386,16 +386,25 @@ export function updateSettings(state: AppState, newSettings: Partial<AppSettings
   return newState
 }
 
-// Analytics helpers
+// Week is Monday–Sunday (calendar week)
+const WEEK_STARTS_ON = 1 // Monday
+
 export function getWorkoutsThisWeek(state: AppState): number {
   const now = new Date()
+  // Monday of current week: getDay() 0=Sun, 1=Mon -> days since Monday = (getDay() - 1 + 7) % 7
+  const daysSinceMonday = (now.getDay() - WEEK_STARTS_ON + 7) % 7
   const startOfWeek = new Date(now)
-  startOfWeek.setDate(now.getDate() - now.getDay())
+  startOfWeek.setDate(now.getDate() - daysSinceMonday)
   startOfWeek.setHours(0, 0, 0, 0)
-  
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 6)
+  endOfWeek.setHours(23, 59, 59, 999)
+
   return state.sessions.filter(s => {
-    const sessionDate = new Date(s.date)
-    return s.completed && sessionDate >= startOfWeek
+    if (!s.completed) return false
+    const [y, m, d] = s.date.split('-').map(Number)
+    const sessionDate = new Date(y, m - 1, d)
+    return sessionDate >= startOfWeek && sessionDate <= endOfWeek
   }).length
 }
 

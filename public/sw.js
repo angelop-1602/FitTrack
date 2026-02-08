@@ -1,6 +1,6 @@
 // Service Worker for FitTrack PWA
-// Version: 1.0.0
-const APP_VERSION = '1.0.0';
+// Version: 1.0.1
+const APP_VERSION = '1.0.1';
 const CACHE_VERSION = 1;
 const CACHE_NAME = `fittrack-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -10,8 +10,7 @@ const PRECACHE_URLS = [
   '/',
   '/offline.html',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/logo.png',
 ];
 
 // Install event - cache core assets
@@ -166,8 +165,8 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: data.body || 'New workout notification',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/logo.png',
+    badge: '/logo.png',
     vibrate: [200, 100, 200],
     data: data.data || {},
   };

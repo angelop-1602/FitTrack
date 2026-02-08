@@ -34,12 +34,12 @@ export function InstallBanner() {
   }
 
   return (
-    <Card className="mb-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-500/20">
+    <Card className="mb-4 bg-primary/10 border-primary/20">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-              <Download className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+              <Download className="w-5 h-5 text-primary-foreground" />
             </div>
           </div>
           
@@ -54,7 +54,7 @@ export function InstallBanner() {
             <Link href="/install">
               <Button 
                 size="sm"
-                className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-xs"
+                className="text-xs"
               >
                 Learn More
               </Button>

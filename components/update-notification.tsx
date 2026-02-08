@@ -58,12 +58,12 @@ export function UpdateNotification() {
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-5 duration-500 max-w-md w-full px-4">
-      <Card className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-md border-green-500/30 shadow-lg">
+      <Card className="bg-primary/10 backdrop-blur-md border-primary/30 shadow-lg">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-                <RefreshCw className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                <RefreshCw className="w-5 h-5 text-primary-foreground" />
               </div>
             </div>
             
@@ -78,7 +78,7 @@ export function UpdateNotification() {
               <Button 
                 size="sm"
                 onClick={handleUpdate}
-                className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-xs h-8"
+                className="text-xs h-8"
               >
                 Update Now
               </Button>

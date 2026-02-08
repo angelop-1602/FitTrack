@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useStore } from '@/lib/store-context'
 import { getTodayDate } from '@/lib/store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Footprints, Check } from 'lucide-react'
 
+const AUTO_SAVE_DELAY_MS = 1200
+
 export function StepsTodayCard() {
   const { state, getStepsForDate, saveSteps } = useStore()
   const today = getTodayDate()
@@ -16,20 +18,62 @@ export function StepsTodayCard() {
   
   const [inputValue, setInputValue] = useState('')
   const [saved, setSaved] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const inputValueRef = useRef(inputValue)
+  inputValueRef.current = inputValue
 
   useEffect(() => {
     if (todaySteps) {
       setInputValue(todaySteps.stepCount.toString())
+    } else {
+      setInputValue('')
     }
   }, [todaySteps])
 
-  const handleSave = () => {
-    const stepCount = parseInt(inputValue, 10)
+  const performSave = useCallback((value?: string) => {
+    const raw = value !== undefined ? value : inputValueRef.current
+    const trimmed = String(raw).trim()
+    const stepCount = trimmed === '' ? 0 : parseInt(trimmed, 10)
     if (!isNaN(stepCount) && stepCount >= 0) {
       saveSteps(today, stepCount)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     }
+  }, [today, saveSteps])
+
+  const handleSave = () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+      debounceRef.current = null
+    }
+    performSave()
+  }
+
+  const scheduleAutoSave = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null
+      performSave()
+    }, AUTO_SAVE_DELAY_MS)
+  }, [performSave])
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value)
+    scheduleAutoSave()
+  }
+
+  const handleBlur = () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+      debounceRef.current = null
+    }
+    performSave()
   }
 
   const stepGoal = state.settings.stepGoal
@@ -69,7 +113,8 @@ export function StepsTodayCard() {
             type="number"
             placeholder="Enter steps"
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={handleChange}
+            onBlur={handleBlur}
             className="flex-1"
             min={0}
           />

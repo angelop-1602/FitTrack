@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { ChevronRight, Calendar, Footprints, Search, Check, Dumbbell } from 'lucide-react'
+import { ChevronRight, Calendar, Footprints, Search, Check, Dumbbell, Pencil, X } from 'lucide-react'
 
 export default function HistoryPage() {
   const { state, isLoading, saveSteps } = useStore()
@@ -48,10 +48,16 @@ export default function HistoryPage() {
 
   const handleSaveSteps = (date: string) => {
     if (!editingSteps || editingSteps.date !== date) return
-    const stepCount = parseInt(editingSteps.value, 10)
+    // Allow saving zero or empty (empty = 0)
+    const trimmed = editingSteps.value.trim()
+    const stepCount = trimmed === '' ? 0 : parseInt(trimmed, 10)
     if (!isNaN(stepCount) && stepCount >= 0) {
       saveSteps(date, stepCount)
     }
+    setEditingSteps(null)
+  }
+
+  const handleCancelEditSteps = () => {
     setEditingSteps(null)
   }
 
@@ -182,33 +188,58 @@ export default function HistoryPage() {
                             date: entry.date, 
                             value: e.target.value 
                           })}
+                          onBlur={() => handleSaveSteps(entry.date)}
                           className="h-8 w-24 text-right"
                           min={0}
                         />
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 bg-transparent"
+                          className="h-8 w-8 shrink-0"
                           onClick={() => handleSaveSteps(entry.date)}
+                          aria-label="Save"
                         >
                           <Check className="h-4 w-4" />
                         </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                          onClick={handleCancelEditSteps}
+                          aria-label="Cancel"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </>
                     ) : (
-                      <button
-                        className="text-right transition-colors hover:text-primary"
-                        onClick={() => setEditingSteps({ 
-                          date: entry.date, 
-                          value: entry.stepCount.toString() 
-                        })}
-                      >
-                        <span className="text-lg font-bold">
-                          {entry.stepCount.toLocaleString()}
-                        </span>
-                        <span className="ml-1 text-xs text-muted-foreground">
-                          steps
-                        </span>
-                      </button>
+                      <>
+                        <button
+                          className="text-right transition-colors hover:text-primary flex items-baseline"
+                          onClick={() => setEditingSteps({ 
+                            date: entry.date, 
+                            value: entry.stepCount.toString() 
+                          })}
+                        >
+                          <span className="text-lg font-bold">
+                            {entry.stepCount.toLocaleString()}
+                          </span>
+                          <span className="ml-1 text-xs text-muted-foreground">
+                            steps
+                          </span>
+                        </button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary"
+                          onClick={() => setEditingSteps({ 
+                            date: entry.date, 
+                            value: entry.stepCount.toString() 
+                          })}
+                          aria-label="Edit steps"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </CardContent>

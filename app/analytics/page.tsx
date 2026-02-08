@@ -27,10 +27,10 @@ import { Footprints, Dumbbell, TrendingUp, Target, Clock, Activity, Heart, Zap, 
 // Helper to get computed CSS variable values
 function useChartColors() {
   const [colors, setColors] = useState({
-    chart1: 'oklch(0.65 0.2 160)',
-    chart2: 'oklch(0.7 0.15 200)',
+    chart1: 'oklch(0.68 0.18 47)',
+    chart2: 'oklch(0.6 0.16 260)',
     chart3: 'oklch(0.6 0.18 280)',
-    chart4: 'oklch(0.75 0.15 80)',
+    chart4: 'oklch(0.75 0.14 58)',
     chart5: 'oklch(0.6 0.2 30)',
     muted: 'oklch(0.95 0 0)',
   })
@@ -42,10 +42,10 @@ function useChartColors() {
     const computed = getComputedStyle(root)
     
     setColors({
-      chart1: computed.getPropertyValue('--chart-1').trim() || 'oklch(0.65 0.2 160)',
-      chart2: computed.getPropertyValue('--chart-2').trim() || 'oklch(0.7 0.15 200)',
+      chart1: computed.getPropertyValue('--chart-1').trim() || 'oklch(0.68 0.18 47)',
+      chart2: computed.getPropertyValue('--chart-2').trim() || 'oklch(0.6 0.16 260)',
       chart3: computed.getPropertyValue('--chart-3').trim() || 'oklch(0.6 0.18 280)',
-      chart4: computed.getPropertyValue('--chart-4').trim() || 'oklch(0.75 0.15 80)',
+      chart4: computed.getPropertyValue('--chart-4').trim() || 'oklch(0.75 0.14 58)',
       chart5: computed.getPropertyValue('--chart-5').trim() || 'oklch(0.6 0.2 30)',
       muted: computed.getPropertyValue('--muted').trim() || 'oklch(0.95 0 0)',
     })
@@ -62,16 +62,16 @@ export default function AnalyticsPage() {
 
   // Chart config using CSS variables
   const chartConfig = useMemo(() => ({
-    steps: { label: 'Steps', color: 'hsl(var(--chart-2))' },
-    goal: { label: 'Goal', color: 'hsl(var(--muted))' },
-    workouts: { label: 'Workouts', color: 'hsl(var(--chart-1))' },
-    weight: { label: 'Best Set (kg)', color: 'hsl(var(--chart-1))' },
-    volume: { label: 'Volume', color: 'hsl(var(--chart-2))' },
-    duration: { label: 'Duration (min)', color: 'hsl(var(--chart-3))' },
-    cardio: { label: 'Cardio (min)', color: 'hsl(var(--chart-5))' },
-    rpe: { label: 'RPE', color: 'hsl(var(--chart-4))' },
-    day: { label: 'Day', color: 'hsl(var(--chart-1))' },
-    frequency: { label: 'Frequency', color: 'hsl(var(--chart-2))' },
+    steps: { label: 'Steps', color: 'var(--chart-2)' },
+    goal: { label: 'Goal', color: 'var(--muted)' },
+    workouts: { label: 'Workouts', color: 'var(--chart-1)' },
+    weight: { label: 'Best Set (kg)', color: 'var(--chart-1)' },
+    volume: { label: 'Volume', color: 'var(--chart-2)' },
+    duration: { label: 'Duration (min)', color: 'var(--chart-3)' },
+    cardio: { label: 'Cardio (min)', color: 'var(--chart-5)' },
+    rpe: { label: 'RPE', color: 'var(--chart-4)' },
+    day: { label: 'Day', color: 'var(--chart-1)' },
+    frequency: { label: 'Frequency', color: 'var(--chart-2)' },
   }), [])
 
   // Get all unique exercises from history
@@ -106,16 +106,17 @@ export default function AnalyticsPage() {
     return data
   }, [state.steps, state.settings.stepGoal, stepsRange])
 
+  const weekOpt = { weekStartsOn: 1 } as const // Monday–Sunday
+
   // Workouts per week data
   const workoutsPerWeekData = useMemo(() => {
     const today = new Date()
-    const weeks = eachWeekOfInterval({
-      start: subWeeks(today, 7),
-      end: today,
-    })
-    
+    const weeks = eachWeekOfInterval(
+      { start: subWeeks(today, 7), end: today },
+      weekOpt
+    )
     return weeks.map(weekStart => {
-      const weekEnd = endOfWeek(weekStart)
+      const weekEnd = endOfWeek(weekStart, weekOpt)
       const weekSessions = state.sessions.filter(s => {
         if (!s.completed) return false
         const sessionDate = parseISO(s.date)
@@ -165,13 +166,16 @@ export default function AnalyticsPage() {
     return data
   }, [state.sessions, selectedExercise])
 
-  // Summary stats
+  // Summary stats (Monday–Sunday week)
   const weeklyStepsTotal = useMemo(() => {
     const today = new Date()
-    const weekStart = startOfWeek(today)
-    
+    const weekStart = startOfWeek(today, weekOpt)
+    const weekEnd = endOfWeek(today, weekOpt)
     return state.steps
-      .filter(s => parseISO(s.date) >= weekStart)
+      .filter(s => {
+        const d = parseISO(s.date)
+        return d >= weekStart && d <= weekEnd
+      })
       .reduce((sum, s) => sum + s.stepCount, 0)
   }, [state.steps])
 
@@ -238,13 +242,13 @@ export default function AnalyticsPage() {
 
   const weeklyVolume = useMemo(() => {
     const today = new Date()
-    const weekStart = startOfWeek(today)
-    
+    const weekStart = startOfWeek(today, weekOpt)
+    const weekEnd = endOfWeek(today, weekOpt)
     return state.sessions
       .filter(s => {
         if (!s.completed) return false
         const sessionDate = parseISO(s.date)
-        return sessionDate >= weekStart
+        return sessionDate >= weekStart && sessionDate <= weekEnd
       })
       .reduce((sum, session) => {
         const sessionVolume = session.sets.reduce((setSum, set) => {
@@ -296,13 +300,13 @@ export default function AnalyticsPage() {
 
   const weeklyCardio = useMemo(() => {
     const today = new Date()
-    const weekStart = startOfWeek(today)
-    
+    const weekStart = startOfWeek(today, weekOpt)
+    const weekEnd = endOfWeek(today, weekOpt)
     return state.sessions
       .filter(s => {
         if (!s.completed) return false
         const sessionDate = parseISO(s.date)
-        return sessionDate >= weekStart
+        return sessionDate >= weekStart && sessionDate <= weekEnd
       })
       .reduce((sum, session) => {
         const cardioSets = session.sets.filter(set => 
@@ -466,17 +470,18 @@ export default function AnalyticsPage() {
       .slice(0, 10) // Top 10
   }, [state.sessions])
 
-  // Comparative Analytics - This Week vs Last Week
+  // Comparative Analytics - This Week vs Last Week (Monday–Sunday)
   const weeklyComparison = useMemo(() => {
     const today = new Date()
-    const thisWeekStart = startOfWeek(today)
+    const thisWeekStart = startOfWeek(today, weekOpt)
+    const thisWeekEnd = endOfWeek(today, weekOpt)
     const lastWeekStart = subWeeks(thisWeekStart, 1)
-    const lastWeekEnd = endOfWeek(lastWeekStart)
+    const lastWeekEnd = endOfWeek(lastWeekStart, weekOpt)
 
     const thisWeekSessions = state.sessions.filter(s => {
       if (!s.completed) return false
       const sessionDate = parseISO(s.date)
-      return sessionDate >= thisWeekStart
+      return sessionDate >= thisWeekStart && sessionDate <= thisWeekEnd
     })
 
     const lastWeekSessions = state.sessions.filter(s => {
@@ -676,8 +681,8 @@ export default function AnalyticsPage() {
             </Card>
             <Card className="border-none bg-secondary/50">
               <CardContent className="flex flex-col items-center p-2.5 text-center">
-                <div className="mb-1 rounded-lg bg-chart-1/10 p-1.5">
-                  <Dumbbell className="h-3.5 w-3.5 text-chart-1" />
+                <div className="mb-1 rounded-lg bg-primary/10 p-1.5">
+                  <Dumbbell className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <p className="text-base font-bold">{totalWorkouts}</p>
                 <p className="text-[10px] text-muted-foreground">Total workouts</p>
@@ -726,8 +731,8 @@ export default function AnalyticsPage() {
                   <div className="mt-1.5 flex items-center gap-1 text-[10px]">
                     {weeklyComparison.workouts.thisWeek > weeklyComparison.workouts.lastWeek ? (
                       <>
-                        <ArrowUp className="h-3 w-3 text-chart-1" />
-                        <span className="text-chart-1">
+                        <ArrowUp className="h-3 w-3 text-primary" />
+                        <span className="text-primary">
                           +{weeklyComparison.workouts.thisWeek - weeklyComparison.workouts.lastWeek}
                         </span>
                       </>
@@ -773,8 +778,8 @@ export default function AnalyticsPage() {
                   <div className="mt-1.5 flex items-center gap-1 text-[10px]">
                     {weeklyComparison.volume.thisWeek > weeklyComparison.volume.lastWeek ? (
                       <>
-                        <ArrowUp className="h-3 w-3 text-chart-1" />
-                        <span className="text-chart-1">
+                        <ArrowUp className="h-3 w-3 text-primary" />
+                        <span className="text-primary">
                           +{((weeklyComparison.volume.thisWeek - weeklyComparison.volume.lastWeek) / weeklyComparison.volume.lastWeek * 100).toFixed(0)}%
                         </span>
                       </>
@@ -812,8 +817,8 @@ export default function AnalyticsPage() {
                   <div className="mt-1.5 flex items-center gap-1 text-[10px]">
                     {weeklyComparison.duration.thisWeek > weeklyComparison.duration.lastWeek ? (
                       <>
-                        <ArrowUp className="h-3 w-3 text-chart-1" />
-                        <span className="text-chart-1">
+                        <ArrowUp className="h-3 w-3 text-primary" />
+                        <span className="text-primary">
                           +{weeklyComparison.duration.thisWeek - weeklyComparison.duration.lastWeek}m
                         </span>
                       </>
@@ -851,8 +856,8 @@ export default function AnalyticsPage() {
                   <div className="mt-1.5 flex items-center gap-1 text-[10px]">
                     {weeklyComparison.cardio.thisWeek > weeklyComparison.cardio.lastWeek ? (
                       <>
-                        <ArrowUp className="h-3 w-3 text-chart-1" />
-                        <span className="text-chart-1">
+                        <ArrowUp className="h-3 w-3 text-primary" />
+                        <span className="text-primary">
                           +{weeklyComparison.cardio.thisWeek - weeklyComparison.cardio.lastWeek}m
                         </span>
                       </>
@@ -911,14 +916,14 @@ export default function AnalyticsPage() {
                 <Line
                   type="monotone"
                   dataKey="steps"
-                  stroke="hsl(var(--chart-2))"
+                  stroke={chartColors.chart2}
                   strokeWidth={2}
                   dot={false}
                 />
                 <Line
                   type="monotone"
                   dataKey="goal"
-                  stroke="hsl(var(--muted))"
+                  stroke={chartColors.muted}
                   strokeWidth={1}
                   strokeDasharray="5 5"
                   dot={false}
@@ -951,7 +956,7 @@ export default function AnalyticsPage() {
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar 
                   dataKey="workouts" 
-                  fill="hsl(var(--chart-1))"
+                  fill={chartColors.chart1}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -1452,8 +1457,8 @@ export default function AnalyticsPage() {
             </Card>
             <Card className="border-none bg-secondary/50">
               <CardContent className="flex flex-col items-center p-2.5 text-center">
-                <div className="mb-1 rounded-lg bg-chart-1/10 p-1.5">
-                  <Activity className="h-3.5 w-3.5 text-chart-1" />
+                <div className="mb-1 rounded-lg bg-primary/10 p-1.5">
+                  <Activity className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <p className="text-base font-bold">{volumePerExercise.length}</p>
                 <p className="text-[10px] text-muted-foreground">Top exercises</p>

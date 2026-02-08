@@ -16,8 +16,8 @@ export function QuickStats() {
       value: workoutsThisWeek,
       unit: 'workouts',
       icon: Target,
-      color: 'text-chart-1',
-      bgColor: 'bg-chart-1/10',
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
     },
     {
       label: '7-Day Avg',

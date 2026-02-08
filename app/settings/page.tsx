@@ -169,8 +169,8 @@ export default function SettingsPage() {
       <Card className="mb-4">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-1/10">
-              <Dumbbell className="h-5 w-5 text-chart-1" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <Dumbbell className="h-5 w-5 text-primary" />
             </div>
             <div>
               <CardTitle className="text-base">Workout Rotation</CardTitle>

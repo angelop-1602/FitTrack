@@ -43,8 +43,8 @@ export function NetworkStatus() {
     <div
       className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full shadow-lg backdrop-blur-md border transition-all duration-300 ${
         isOnline
-          ? 'bg-green-500/20 border-green-500/30 text-green-400'
-          : 'bg-red-500/20 border-red-500/30 text-red-400'
+          ? 'bg-primary/20 border-primary/30 text-primary'
+          : 'bg-destructive/20 border-destructive/30 text-destructive'
       } ${showStatus ? 'animate-in slide-in-from-top-5' : 'animate-out slide-out-to-top-5'}`}
     >
       <div className="flex items-center gap-2 text-sm font-medium">

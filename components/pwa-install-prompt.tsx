@@ -75,11 +75,11 @@ export function PWAInstallPrompt() {
 
   return (
     <div className="fixed bottom-5 left-4 right-4 z-50 animate-in slide-in-from-bottom-5 duration-500">
-      <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 backdrop-blur-md border border-green-500/20 rounded-lg p-4 shadow-lg">
+      <div className="bg-primary/10 backdrop-blur-md border border-primary/20 rounded-lg p-4 shadow-lg">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-1">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-              <Download className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+              <Download className="w-6 h-6 text-primary-foreground" />
             </div>
           </div>
           
@@ -93,7 +93,6 @@ export function PWAInstallPrompt() {
               <Button 
                 onClick={handleInstallClick}
                 size="sm"
-                className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
               >
                 Install App
               </Button>

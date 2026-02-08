@@ -62,7 +62,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-foreground">Today</h1>
           <Badge 
             variant="secondary" 
-            className="flex items-center gap-1.5 bg-chart-5/10 text-chart-5 hover:bg-chart-5/20"
+            className="flex items-center gap-1.5 bg-primary/10 text-primary hover:bg-primary/20"
           >
             <Flame className="h-5 w-5" />
             <span className="font-semibold">{streak}</span>

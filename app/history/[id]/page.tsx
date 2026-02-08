@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useMemo } from 'react'
+import { use, useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store-context'
@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +22,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { ArrowLeft, Clock, Calendar, Trash2, Dumbbell } from 'lucide-react'
+import { ArrowLeft, Clock, Calendar, Trash2, Dumbbell, Pencil, Save, X } from 'lucide-react'
+import type { WorkoutSession, WorkoutSet } from '@/lib/types'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -29,28 +32,65 @@ interface PageProps {
 export default function WorkoutDetailPage({ params }: PageProps) {
   const { id } = use(params)
   const router = useRouter()
-  const { state, isLoading, getSessionById, deleteSession } = useStore()
+  const { state, isLoading, getSessionById, deleteSession, saveSession } = useStore()
 
   const session = getSessionById(id)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editSession, setEditSession] = useState<WorkoutSession | null>(null)
+
+  const startEditing = useCallback(() => {
+    if (session) {
+      setEditSession(JSON.parse(JSON.stringify(session)))
+      setIsEditing(true)
+    }
+  }, [session])
+
+  const cancelEditing = useCallback(() => {
+    setEditSession(null)
+    setIsEditing(false)
+  }, [])
+
+  const saveEditing = useCallback(() => {
+    if (editSession) {
+      saveSession(editSession)
+      setEditSession(null)
+      setIsEditing(false)
+    }
+  }, [editSession, saveSession])
+
+  const updateSet = useCallback((setId: string, updates: Partial<WorkoutSet>) => {
+    setEditSession(prev => {
+      if (!prev) return null
+      return {
+        ...prev,
+        sets: prev.sets.map(s => s.id === setId ? { ...s, ...updates } : s),
+      }
+    })
+  }, [])
+
+  const updateSessionField = useCallback(<K extends keyof WorkoutSession>(key: K, value: WorkoutSession[K]) => {
+    setEditSession(prev => prev ? { ...prev, [key]: value } : null)
+  }, [])
+
+  const displaySession = isEditing ? editSession : session
 
   // Group sets by exercise
   const exerciseGroups = useMemo(() => {
-    if (!session) return []
-    
-    const groups: { [key: string]: typeof session.sets } = {}
-    session.sets.forEach(set => {
+    if (!displaySession) return []
+    const sets = displaySession.sets
+    const groups: { [key: string]: typeof sets } = {}
+    sets.forEach(set => {
       if (!groups[set.exerciseKey]) {
         groups[set.exerciseKey] = []
       }
       groups[set.exerciseKey].push(set)
     })
-    
-    return Object.entries(groups).map(([key, sets]) => ({
+    return Object.entries(groups).map(([key, groupSets]) => ({
       exerciseKey: key,
-      exerciseName: sets[0].exerciseName,
-      sets: sets.sort((a, b) => a.setNumber - b.setNumber),
+      exerciseName: groupSets[0].exerciseName,
+      sets: groupSets.sort((a, b) => a.setNumber - b.setNumber),
     }))
-  }, [session])
+  }, [displaySession])
 
   const handleDelete = () => {
     deleteSession(id)
@@ -87,25 +127,18 @@ export default function WorkoutDetailPage({ params }: PageProps) {
     )
   }
 
-  const totalSets = session.sets.length
-  // For incline walk, check if reps (total seconds) is set
-  // For other exercises, check if both weight and reps are set
-  const completedSets = session.sets.filter(s => {
+  const totalSets = displaySession.sets.length
+  const completedSets = displaySession.sets.filter(s => {
     const isInclineWalk = s.exerciseKey.startsWith('cardio-incline-walk')
     if (isInclineWalk) {
       return s.reps !== null && s.reps > 0
     }
     return s.weight !== null && s.reps !== null
   }).length
-  const totalVolume = session.sets.reduce((sum, s) => {
+  const totalVolume = displaySession.sets.reduce((sum, s) => {
     const isInclineWalk = s.exerciseKey.startsWith('cardio-incline-walk')
-    if (isInclineWalk) {
-      // Don't count incline walk in volume calculation
-      return sum
-    }
-    if (s.weight && s.reps) {
-      return sum + (s.weight * s.reps)
-    }
+    if (isInclineWalk) return sum
+    if (s.weight && s.reps) return sum + (s.weight * s.reps)
     return sum
   }, 0)
 
@@ -124,44 +157,86 @@ export default function WorkoutDetailPage({ params }: PageProps) {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-xl font-bold">
-              Day {session.dayIndex} - {session.dayName}
+              Day {displaySession.dayIndex} - {displaySession.dayName}
             </h1>
             <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                {format(parseISO(session.date), 'EEEE, MMM d, yyyy')}
+                {format(parseISO(displaySession.date), 'EEEE, MMM d, yyyy')}
               </span>
-              {session.durationMin && (
+              {(displaySession.durationMin != null && displaySession.durationMin > 0) && (
                 <span className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  {session.durationMin} min
+                  {displaySession.durationMin} min
                 </span>
               )}
             </div>
           </div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="bg-transparent text-muted-foreground hover:text-destructive">
-                <Trash2 className="h-5 w-5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete workout?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete this workout session and all its data.
-                  This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <div className="flex items-center gap-1">
+            {isEditing ? (
+              <>
+                <Button variant="ghost" size="icon" onClick={cancelEditing} className="text-muted-foreground hover:text-foreground" aria-label="Cancel">
+                  <X className="h-5 w-5" />
+                </Button>
+                <Button size="sm" onClick={saveEditing} className="gap-1.5">
+                  <Save className="h-4 w-4" />
+                  Save
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="icon" onClick={startEditing} className="text-muted-foreground hover:text-primary" aria-label="Edit workout">
+                  <Pencil className="h-5 w-5" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="bg-transparent text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete workout?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete this workout session and all its data.
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Edit: Duration */}
+        {isEditing && editSession && (
+          <Card className="mt-4">
+            <CardContent className="pt-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Duration (min)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={editSession.durationMin ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    updateSessionField('durationMin', v === '' ? null : Math.max(0, parseInt(v, 10) || 0))
+                  }}
+                  placeholder="Optional"
+                  className="max-w-[120px]"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Summary Stats */}
         <div className="mt-4 grid grid-cols-3 gap-3">
@@ -196,8 +271,6 @@ export default function WorkoutDetailPage({ params }: PageProps) {
       <div className="space-y-4">
         {exerciseGroups.map(({ exerciseKey, exerciseName, sets }) => {
           const isInclineWalk = exerciseKey.startsWith('cardio-incline-walk')
-          
-          // Helper function to format seconds as MM:SS
           const formatTime = (totalSeconds: number | null): string => {
             if (totalSeconds === null || totalSeconds === 0) return '-'
             const minutes = Math.floor(totalSeconds / 60)
@@ -212,7 +285,6 @@ export default function WorkoutDetailPage({ params }: PageProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-1">
-                  {/* Header */}
                   {isInclineWalk ? (
                     <div className="grid grid-cols-3 gap-2 text-xs font-medium text-muted-foreground">
                       <span>Set</span>
@@ -228,28 +300,110 @@ export default function WorkoutDetailPage({ params }: PageProps) {
                     </div>
                   )}
                   <Separator className="my-2" />
-                  {/* Rows */}
                   {sets.map((set) => (
                     <div 
                       key={set.id} 
-                      className={isInclineWalk ? "grid grid-cols-3 gap-2 py-1.5 text-sm" : "grid grid-cols-4 gap-2 py-1.5 text-sm"}
+                      className={isInclineWalk ? "grid grid-cols-3 gap-2 py-1.5 text-sm items-center" : "grid grid-cols-4 gap-2 py-1.5 text-sm items-center"}
                     >
                       <span className="font-medium">{set.setNumber}</span>
-                      {isInclineWalk ? (
-                        <>
-                          <span>{formatTime(set.reps)}</span>
-                          <span className="text-muted-foreground">
-                            {set.rpe ?? '-'}
-                          </span>
-                        </>
+                      {isEditing ? (
+                        isInclineWalk ? (
+                          <>
+                            <div className="flex gap-1 items-center">
+                              <Input
+                                type="number"
+                                min={0}
+                                className="h-8 w-14 text-sm"
+                                placeholder="M"
+                                value={set.reps != null ? Math.floor(set.reps / 60) : ''}
+                                onChange={(e) => {
+                                  const m = parseInt(e.target.value, 10) || 0
+                                  const sec = set.reps != null ? set.reps % 60 : 0
+                                  updateSet(set.id, { reps: m * 60 + sec || null })
+                                }}
+                              />
+                              <span className="text-muted-foreground">:</span>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={59}
+                                className="h-8 w-14 text-sm"
+                                placeholder="S"
+                                value={set.reps != null ? set.reps % 60 : ''}
+                                onChange={(e) => {
+                                  const s = Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0))
+                                  const min = set.reps != null ? Math.floor(set.reps / 60) : 0
+                                  updateSet(set.id, { reps: min * 60 + s || null })
+                                }}
+                              />
+                            </div>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={10}
+                              step={0.5}
+                              className="h-8 w-14 text-sm"
+                              placeholder="RPE"
+                              value={set.rpe ?? ''}
+                              onChange={(e) => {
+                                const v = e.target.value
+                                updateSet(set.id, { rpe: v === '' ? null : parseFloat(v) || null })
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <Input
+                              type="number"
+                              min={0}
+                              step={0.5}
+                              className="h-8 text-sm"
+                              placeholder="-"
+                              value={set.weight ?? ''}
+                              onChange={(e) => {
+                                const v = e.target.value
+                                updateSet(set.id, { weight: v === '' ? null : parseFloat(v) || null })
+                              }}
+                            />
+                            <Input
+                              type="number"
+                              min={0}
+                              className="h-8 text-sm"
+                              placeholder="-"
+                              value={set.reps ?? ''}
+                              onChange={(e) => {
+                                const v = e.target.value
+                                updateSet(set.id, { reps: v === '' ? null : parseInt(v, 10) || null })
+                              }}
+                            />
+                            <Input
+                              type="number"
+                              min={1}
+                              max={10}
+                              step={0.5}
+                              className="h-8 w-14 text-sm"
+                              placeholder="RPE"
+                              value={set.rpe ?? ''}
+                              onChange={(e) => {
+                                const v = e.target.value
+                                updateSet(set.id, { rpe: v === '' ? null : parseFloat(v) || null })
+                              }}
+                            />
+                          </>
+                        )
                       ) : (
-                        <>
-                          <span>{set.weight ?? '-'}</span>
-                          <span>{set.reps ?? '-'}</span>
-                          <span className="text-muted-foreground">
-                            {set.rpe ?? '-'}
-                          </span>
-                        </>
+                        isInclineWalk ? (
+                          <>
+                            <span>{formatTime(set.reps)}</span>
+                            <span className="text-muted-foreground">{set.rpe ?? '-'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>{set.weight ?? '-'}</span>
+                            <span>{set.reps ?? '-'}</span>
+                            <span className="text-muted-foreground">{set.rpe ?? '-'}</span>
+                          </>
+                        )
                       )}
                     </div>
                   ))}
@@ -261,13 +415,22 @@ export default function WorkoutDetailPage({ params }: PageProps) {
       </div>
 
       {/* Notes */}
-      {session.notes && (
+      {(displaySession.notes || (isEditing && editSession)) && (
         <Card className="mt-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Notes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">{session.notes}</p>
+            {isEditing && editSession ? (
+              <Input
+                value={editSession.notes ?? ''}
+                onChange={(e) => updateSessionField('notes', e.target.value)}
+                placeholder="Optional notes"
+                className="w-full"
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">{displaySession.notes || '—'}</p>
+            )}
           </CardContent>
         </Card>
       )}
